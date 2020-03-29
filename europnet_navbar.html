@@ -1,0 +1,116 @@
+<!-- Plugin by Cory Chaplin (elephantman@europnet.org) - http://www.europnet.org - 03/2020 -->
+<div class="navbar" id="navbar">
+    <a class="logo" href="EuropNet" target="_blank">
+        <img src="http://dev.europnet.org:7779/assets/plugins/images/logo-en-white.png" height="50" alt="EuropNet" title="EuropNet">
+    </a>
+    <div class="nav">
+        <ul>
+            <li>
+                <a href="http://www.chat-fr.org/photos" target="_blank" title="Photos chatteurs"
+                   onclick="javascript:ga('send', 'event', 'Menu', 'Photos');">
+                    <i class="fa fa-camera" title="Photos chatteurs"></i>Photos chatteurs
+                </a>
+            </li>
+            <li>
+                <a href="http://www.chat-fr.org/rencontre" target="_blank" title="Annuaire chatteurs"
+                   onclick="javascript:ga('send', 'event', 'Menu', 'Annuaire');">
+                    <i class="fa fa-book" title="Annuaire chatteurs"></i>Annuaire chatteurs
+                </a>
+            </li>
+            <li>
+                <a href="http://www.chat-fr.org/register" target="_blank" title="Crééz votre fiche"
+                   onclick="javascript:ga('send', 'event', 'Menu', 'Inscription');">
+                    <i class="fa fa-user" title="Crééz votre fiche"></i>Crééz votre fiche
+                </a>
+            </li>
+            <li>
+                <a href="http://quote.europnet.org" target="_blank" title="Quotes"
+                   onclick="javascript:ga('send', 'event', 'Menu', 'Quotes');">
+                    <i class="fa fa-quote-right" title="Quotes"></i>Quotes
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .kiwi-wrap {
+        position: relative;
+        top: 50px;
+        height: calc(100% - 50px);
+    }
+    @media only screen and (max-width: 769px) {
+        .nav {
+            display: none;
+        }
+    }
+    #navbar {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-width: 0;
+        border-radius: 0;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        height: 50px;
+        background: #3071a9;
+    }
+    #navbar .logo {
+        height: 50px;
+        position: relative;
+        display: block;
+        width: 150px;
+        float: left;
+        margin-left: 10px;
+    }
+    #navbar .nav ul {
+        display: block;
+        float: left;
+        list-style: outside none none;
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        color: rgb(255, 255, 255);
+        line-height: 1.42857;
+        font-size: 14px;
+        padding: 0;
+        margin: 0;
+    }
+    #navbar .nav li {
+        display: block;
+        float: left;
+        position: relative;
+    }
+    #navbar .nav li a {
+        text-decoration: none;
+        color: #FFF;
+        padding: 0.2em 0.5em;
+        font-size: 1em;
+        margin: 11px 7px;
+        display: inline-block;
+        background: #428BCA none repeat scroll 0;
+        font-weight: normal;
+        line-height: 1.42857;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        cursor: pointer;
+        -moz-user-select: none;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    #navbar .nav li a i {
+        padding-right: 0.5em;
+    }
+    #navbar .nav li a:hover {
+        background-color: #3071a9;
+        border-color: #428BCA;
+    }
+</style>
+
+<script>
+    kiwi.plugin('navbar', function (kiwi) {
+        document.body.appendChild(document.querySelector('#navbar'));
+    });
+</script>
