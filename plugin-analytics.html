@@ -1,0 +1,62 @@
+<!-- Plugin by Cory Chaplin (elephantman@europnet.org) - http://www.europnet.org - 04/2020 -->
+<script>
+function loadAnalytics() {
+    let gaScript = document.createElement('script');
+    gaScript.setAttribute('src', 'https://www.googletagmanager.com/gtag/js?id=UA-36932919-2');
+    document.head.appendChild(gaScript);
+}
+loadAnalytics();
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+
+gtag('config', 'UA-36932919-2', {
+    'page_title' : 'Login',
+    'page_path': '/login'
+});
+gtag('event', 'Login', {
+    event_category: 'KiwiV2',
+    event_label: 'Ready',
+    value: true
+});
+/* gtag('event', <action>, {
+    'event_category': <category>,
+    'event_label': <label>,
+    'value': <value>
+});
+
+ga('send', {
+    hitType: 'event',
+    eventCategory: 'Video',
+    eventAction: 'play',
+    eventLabel: 'cats.mp4'
+}); */
+
+/* Bind kiwi events to GA */
+kiwi.plugin('analytics', function(kiwi, log) {
+    kiwi.on('network.connecting', function(event) {
+        gtag('event', 'Login', {
+            event_category: 'KiwiV2',
+            event_label: 'Connecting',
+            value: true
+        });
+    });
+
+    kiwi.on('irc.registered', function(event) {
+        gtag('event', 'Server', {
+            event_category: 'KiwiV2',
+            event_label: 'Connected',
+            value: true
+        });
+    });
+
+    // Count minutes
+    setInterval(function(){
+        gtag('event', 'Minutes', {
+            event_category: 'KiwiV2',
+            event_label: '+1',
+            value: true
+        });
+    }, 60000);
+});
+</script>
