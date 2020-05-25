@@ -1,0 +1,32 @@
+<template id="block-pv">
+    <a @click="buttonClicked">
+      <span v-if="$state.ui.app_width > 769">
+          <i v-if="blockPM" class="fa fa-envelope-open" aria-hidden="true"></i><i v-else class="fa fa-envelope" aria-hidden="true"></i>
+          <span v-if="blockPM">Débloquer les PV</span>
+          <span v-else>Bloquer les PV</span>
+      </span>
+        <i v-else class="fa fa-envelope" aria-hidden="true" title="Bloquer les PV"></i>
+    </a>
+</template>
+<script>
+    kiwi.plugin('block_pv', function(kiwi, log) {
+        var button = new kiwi.Vue({
+            template: '#block-pv',
+            computed: {
+                blockPM: function blockPM() {
+                    return kiwi.state.setting('buffers.block_pms');
+
+                }
+            },
+            methods: {
+                buttonClicked: function buttonClicked() {
+                    var msg = 'Vous venez de ' + (this.blockPM ? 'débloquer' : 'bloquer') + ' vos messages privés.';
+                    var network = this.$state.getActiveNetwork();
+                    kiwi.state.setting('buffers.block_pms', !this.blockPM);
+                    kiwi.state.addMessage(kiwi.state.getActiveBuffer(), { nick: 'Message automatique', message: msg, type: 'notice' });
+                }
+            },
+        });
+        kiwi.addUi('header_channel', button.$mount().$el);
+    });
+</script>
