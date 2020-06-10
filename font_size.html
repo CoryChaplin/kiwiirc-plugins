@@ -1,0 +1,79 @@
+<template id="font-size">
+    <div class="kiwi-format-buttons">
+        <a class="kiwi-decrease-font" title="Reduce text size"
+             @click="decreaseFont"
+        >
+            A<sup>-</sup>
+        </a>
+        <a class="kiwi-increase-font" title="Increase text size"
+             @click="increaseFont"
+        >
+            A<sup>+</sup>
+        </a>
+    </div>
+</template>
+<script>
+    kiwi.plugin('font-size', function(kiwi, log) {
+
+        let fontSize = new kiwi.Vue({
+            template: '#font-size',
+            data() {
+                return {
+                    size: 100,
+                };
+            },
+            methods: {
+                increaseFont: function increaseFont() {
+                    if(this.size < 140) {
+                        this.size = this.size + 10;
+                        console.log('reduce', this.size);
+                    }
+                    this.resizeFont()
+                },
+                decreaseFont: function decreaseFont() {
+                    if(this.size > 70) {
+                        this.size = this.size - 10;
+                        console.log('increase', this.size);
+                    }
+                    this.resizeFont()
+                },
+                resizeFont: function resizeFont() {
+                    document.querySelector('.kiwi-wrap').style.fontSize = this.size + '%';
+                },
+            },
+        });
+        kiwi.addUi('browser', fontSize.$mount().$el);
+    });
+</script>
+
+<style>
+.kiwi-format-buttons {
+    position: absolute;
+    top: 5px;
+    right: 2px;
+    display: block;
+}
+.kiwi-decrease-font,
+.kiwi-increase-font {
+    border: 1px solid #555;
+    background-color: #cecece;
+    border-radius: 3px;
+    color: #555;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 1.3em;
+    margin: 1px;
+    padding: 0 4px 2px !important;
+    opacity: 0.5;
+}
+.kiwi-decrease-font:hover,
+.kiwi-increase-font:hover {
+    opacity: 1;
+}
+
+@media screen and (max-width: 769px) {
+    .kiwi-format-buttons {
+        right: 20px;
+    }
+}
+</style>
