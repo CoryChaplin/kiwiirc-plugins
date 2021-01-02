@@ -48,6 +48,12 @@ kiwi.plugin('analytics', function(kiwi) {
             event_label: 'Connected',
             value: true
         });
+
+        gtag('event', 'page_view', {
+            page_path: '/connected',
+            page_title: 'Connected'
+        });
+
     });
 
     // Count minutes
