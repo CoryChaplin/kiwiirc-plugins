@@ -1,4 +1,6 @@
 <script>
+    let Misc = kiwi.require('helpers/Misc');
+
     function randString(n) {
         if (!n) n = 5;
 
@@ -10,6 +12,90 @@
         }
 
         return text;
+    }
+
+    function deterministicString(n) {
+        if (!n) n = 5;
+
+        /*
+            Source : c = chat-fr, e = europnet, a = andromede, f = fantasya, l = 123love, v = loovchat, o = other, m = Mikochat
+            Browser : f = Firefox, c = Chrome, s = Safari, e = Edge, o = other
+            OS : w = Windows, m = MacOS, l = Linux, a = Android, i = iOS, o = other
+            Device type : d = Desktop, m = Mobile
+            Network type : m = Mobile, o = Other, u = Unknown
+            Browser language : f = fr, e = en, o = other
+         */
+        let source = getSource();
+        let browser = getBrowser();
+        let os = getOs();
+        let device_type = getDeviceType();
+        let connection_type = getConnectionType();
+        let language = getLanguage();
+
+        return source + browser + os + device_type + connection_type + language + randString(n-6);
+    }
+
+    function getSource() {
+        let origin;
+
+        if(Misc.queryStringVal('origine') !== undefined) {
+            origin = Misc.queryStringVal('origine');
+
+            // List of EuropNet's source prefixes
+            let prefixes = {'3': 'c', '4': 'e', '5': 'f', '6': 'a', '7': 'c', '8': 'e', '9': 'e', '10': 'l',
+                '11': 'l', '12': 'l', '13': 'l', '14': 'v', '15': 'm'};
+
+            if(origin !== '' && prefixes[origin] !== undefined) return prefixes[origin];
+
+        }
+        return 'o';
+    }
+    function getBrowser() {
+        // CHROME
+        if (/Chrome/.test(navigator.userAgent)) return 'c';
+        // FIREFOX
+        else if (/Firefox/.test(navigator.userAgent)) return 'f';
+        // INTERNET EXPLORER
+        else if (/MSIE/.test(navigator.userAgent)) return 'i';
+        // EDGE
+        else if (/Edge/.test(navigator.userAgent)) return 'e';
+        // SAFARI
+        else if (/Safari/.test(navigator.userAgent)) return 's';
+        // OPERA
+        else if (/Opera/.test(navigator.userAgent)) return 'p';
+        // YANDEX BROWSER
+        else if (/YaBrowser/.test(navigator.userAgent)) return 'y';
+        // OTHERS
+        else return 'o';
+    }
+
+    function getOs() {
+        if (/Win/.test(navigator.userAgent)) return 'w';
+        else if (/Mac/.test(navigator.userAgent)) return 'm';
+        else if (/Linux/.test(navigator.userAgent)) return 'l';
+        else if (/android/.test(navigator.userAgent)) return 'a';
+        else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return 'i';
+        else return 'o';
+    }
+
+    function getDeviceType() {
+        if (/mobile/i.test(navigator.userAgent)) return 'm';
+        else return 'd';
+    }
+
+    function getConnectionType() {
+        if(navigator.connection !== undefined && navigator.connection.effectivetype !== undefined){
+            if(/g/.test(navigator.connection.effectivetype)) return 'm';
+            else return 'o';
+        } else {
+            return 'u';
+        }
+    }
+
+    function getLanguage() {
+        if(/fr/.test(navigator.language)) return 'f';
+        else if(/en/.test(navigator.language)) return 'e';
+        else return 'o';
     }
 
     // Cookies
@@ -41,10 +127,10 @@
 
     function getUsername() {
 
-        var cookie = readCookie('cookie_name');
+        var cookie = readCookie('username');
         if (!cookie) {
-            cookie =  randString(9);
-            createCookie('cookie_name', cookie, 30);
+            cookie =  deterministicString(9);
+            createCookie('username', cookie, 30);
         }
 
         var username = cookie;
@@ -54,7 +140,7 @@
 
         username = window.localStorage.getItem('username');
         if (!username) {
-            username = randString(9);
+            username = deterministicString(9);
             window.localStorage.setItem('username', username);
         }
 
