@@ -62,7 +62,7 @@
                         this.sendMessage('Désolé, seules les images peuvent être téléchargées.', 'error');
                         return;
                     }
-                    if (!file.size >= IMGUR_MAX_SIZE) {
+                    if (file.size >= IMGUR_MAX_SIZE) {
                         this.sendMessage('Désolé, la taille du fichier est limitée à ${IMGUR_MAX_SIZE} octets, vous avez tenté de charger ${fichier.size} octets.', 'error');
                         return;
                     }
