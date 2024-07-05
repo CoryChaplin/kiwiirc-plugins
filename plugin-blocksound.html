@@ -1,0 +1,58 @@
+<template id="block-sound">
+  <div class="kiwi-statebrowser-btnblocksound">
+      <a @click="buttonClicked">
+          <i v-if="blockSOUND" class="fa fa-bell-slash kiwi-statebrowser-btnRedBS" aria-hidden="true" title="Activer les notifications sonores"></i>
+          <i v-else class="fa fa-bell" aria-hidden="true" title="Désactiver les notifications sonores"></i>
+      </a>
+  </div>
+</template>
+
+<script>
+kiwi.plugin('block_sound', function(kiwi, log) {
+    var button = new kiwi.Vue({
+        template: '#block-sound',
+        computed: {
+          	blockSOUND: function blockSOUND() {
+          		return kiwi.state.setting('buffers.mute_sound');
+
+          	}
+        },
+        methods: {
+            buttonClicked: function buttonClicked() {
+                var msg = 'Vous venez ' + (this.blockSOUND ? 'd\'activer' : 'de désactiver') + ' les notifications sonores.';
+                var network = this.$state.getActiveNetwork();
+                kiwi.state.setting('buffers.mute_sound', !this.blockSOUND);
+                kiwi.state.addMessage(kiwi.state.getActiveBuffer(), { nick: 'Message automatique', message: msg, type: 'notice' });
+                if (kiwi.state.ui.is_narrow) {
+                    kiwi.state.$emit('statebrowser.hide');
+                }
+            }
+        },
+    });
+    kiwi.addUi('browser', button.$mount().$el);
+});
+</script>
+
+<style>
+.kiwi-statebrowser-btnblocksound {
+    position: absolute;
+    top: 0px;
+    left: 56px;
+    z-index: 1002;
+    width: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s,opacity .2s;
+    line-height: 32px;
+    font-size: 18px;
+}
+
+.kiwi-statebrowser-btnblocksound:hover {
+    background-color: hsla(0,0%,50.2%,.2);
+    opacity: 1;
+}
+
+.kiwi-statebrowser-btnRedBS {
+    color: #F1948A;
+}
+</style>

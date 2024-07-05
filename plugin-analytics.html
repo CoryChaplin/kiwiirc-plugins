@@ -32,6 +32,59 @@ ga('send', {
     eventLabel: 'cats.mp4'
 }); */
 
+function loadAds() {
+    let gadScript = document.createElement('script');
+    gadScript.setAttribute('src', 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7308685930931350');
+    gadScript.setAttribute('crossorigin', 'anonymous');
+
+    let consentScript = document.createElement('script');
+    consentScript.setAttribute('src', 'https://fundingchoicesmessages.google.com/i/pub-7308685930931350?ers=1');
+    consentScript.setAttribute('nonce', '8E3jRfZNaNqrTM-Ehy_Qqw');
+    
+    document.head.appendChild(gadScript);
+    document.head.appendChild(consentScript);
+}
+
+setTimeout(doAds, 300000);
+
+function doAds() {
+    let buffers = kiwi.state.getBuffersWithUser(kiwi.state.getActiveNetwork().id, kiwi.state.getActiveNetwork().nick);
+    // Check channels & male
+    if((_.invoke(kiwi.state.getActiveNetwork().gecos, "match", /[2-9][0-9] M/) !== undefined) &&
+        (_.find(buffers, function(value) {
+            if(value.name == '#sexee') return true;
+            if(value.name == '#bdsm') return true;
+            if(value.name == '#scenario') return true;
+            if(value.name == '#erotisme') return true;
+            if(value.name == '#sexcam') return true;
+            if(value.name == '#sexe-gay') return true;
+            return false;
+        }) !== undefined)) {
+            console.log('ads staring');
+            (function() {
+                function signalGooglefcPresent() {
+                    if (!window.frames['googlefcPresent']) {
+                        if (document.body) {
+                            const iframe = document.createElement('iframe');
+                            iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;';
+                            iframe.style.display = 'none';
+                            iframe.name = 'googlefcPresent';
+                            document.body.appendChild(iframe);
+                        } else {
+                            setTimeout(signalGooglefcPresent, 0);
+                        }
+                    }
+                }
+                signalGooglefcPresent();
+                })();
+
+            loadAds();
+    }
+}
+
+
+
+
 /* Bind kiwi events to GA */
 kiwi.plugin('analytics', function(kiwi) {
     kiwi.on('network.connecting', function() {
