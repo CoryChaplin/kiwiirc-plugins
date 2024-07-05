@@ -19,7 +19,7 @@ kiwi.plugin('block_pv', function(kiwi, log) {
         },
         methods: {
             buttonClicked: function buttonClicked() {
-                var msg = 'Vous venez de ' + (this.blockPM ? 'dÃ©bloquer' : 'bloquer') + ' vos messages privés.';
+                var msg = 'Vous venez de ' + (this.blockPM ? 'débloquer' : 'bloquer') + ' vos messages privés.';
                 var network = this.$state.getActiveNetwork();
                 kiwi.state.setting('buffers.block_pms', !this.blockPM);
                 kiwi.state.addMessage(kiwi.state.getActiveBuffer(), { nick: 'Message automatique', message: msg, type: 'notice' });
