@@ -61,6 +61,11 @@ function doAds() {
             return false;
         }) !== undefined)) {
             console.log('ads staring');
+            gtag('event', 'Ads', {
+                event_category: 'Loaded',
+                event_label: 'IgniteConsent',
+                value: true
+            });
             (function() {
                 function signalGooglefcPresent() {
                     if (!window.frames['googlefcPresent']) {
