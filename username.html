@@ -18,7 +18,8 @@
         if (!n) n = 5;
 
         /*
-            Source : c = chat-fr, e = europnet, a = andromede, f = fantasya, l = 123love, v = loovchat, o = other, m = Mikochat, x = xchat-fr
+            Source : c = chat-fr, e = europnet, a = andromede, f = fantasya, l = 123love, 
+            v = loovchat, o = other, m = Mikochat, x = xchat-fr, z = mobile app
             Browser : f = Firefox, c = Chrome, s = Safari, e = Edge, o = other
             OS : w = Windows, m = MacOS, l = Linux, a = Android, i = iOS, o = other
             Device type : d = Desktop, m = Mobile
@@ -43,7 +44,7 @@
 
             // List of EuropNet's source prefixes
             let prefixes = {'3': 'c', '4': 'e', '5': 'f', '6': 'a', '7': 'c', '8': 'e', '9': 'e', '10': 'l',
-                '11': 'l', '12': 'l', '13': 'l', '14': 'v', '15': 'm', '16': 'x'};
+                '11': 'l', '12': 'l', '13': 'l', '14': 'v', '15': 'm', '16': 'x', '17': 'z'};
 
             if(origin !== '' && prefixes[origin] !== undefined) return prefixes[origin];
 

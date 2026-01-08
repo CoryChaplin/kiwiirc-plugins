@@ -49,8 +49,11 @@ setTimeout(doAds, 300000);
 
 function doAds() {
     let buffers = kiwi.state.getBuffersWithUser(kiwi.state.getActiveNetwork().id, kiwi.state.getActiveNetwork().nick);
-    // Check channels & male
-    if((_.invoke(kiwi.state.getActiveNetwork().gecos, "match", /[2-9][0-9] M/) !== undefined) &&
+    let regex = /[2-9][0-9] M/; // Men >20 years old
+
+    // Check channels & male & not mobile app
+    if((regex.test(kiwi.state.getActiveNetwork().gecos) &&
+        kiwi.state.getActiveNetwork().username.substring(0, 1) !== 'z') &&
         (_.find(buffers, function(value) {
             if(value.name == '#sexe') return true;
             if(value.name == '#bdsm') return true;
