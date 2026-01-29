@@ -1,8 +1,8 @@
 <!-- Plugin by Cory Chaplin (elephantman@europnet.org) - http://www.europnet.org - 09/2015 -->
 <div class="navbar" id="navbar">
-    <a class="logo" href="http://www.europnet.org" title="EuropNet" target="_blank">
+    <div class="logo">
         <img src="static/logo-en-white.png" height="50" alt="EuropNet" title="EuropNet">
-    </a>
+    </div>
     <div class="nav">
         <ul>
             <li>
@@ -39,13 +39,15 @@
         top: 50px;
         height: calc(100% - 50px);
     }
+
     @media only screen and (max-width: 769px) {
         .nav {
             display: none;
         }
     }
+
     #navbar {
-        position: absolute;
+        position: fixed;
         top: 0;
         width: 100%;
         margin: 0;
@@ -58,6 +60,7 @@
         height: 50px;
         background: #144e7b;
     }
+
     #navbar .logo {
         height: 50px;
         position: relative;
@@ -66,6 +69,7 @@
         float: left;
         margin-left: 10px;
     }
+
     #navbar .nav ul {
         display: block;
         float: left;
@@ -77,11 +81,13 @@
         padding: 0;
         margin: 0;
     }
+
     #navbar .nav li {
         display: block;
         float: left;
         position: relative;
     }
+
     #navbar .nav li a {
         text-decoration: none;
         color: #FFF;
@@ -100,9 +106,11 @@
         border: 1px solid transparent;
         border-radius: 4px;
     }
+
     #navbar .nav li a i {
         padding-right: 0.5em;
     }
+
     #navbar .nav li a:hover {
         background-color: #3071a9;
         border-color: #428BCA;
