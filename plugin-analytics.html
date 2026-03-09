@@ -12,7 +12,12 @@ gtag('js', new Date());
 
 gtag('config', 'UA-36932919-2', {
     'page_title' : 'Login',
-    'page_path': '/login'
+    'page_path': '/login',
+    'custom_map': {
+        'dimension1': 'age',
+        'dimension2': 'gender',
+        'dimension3': 'city',
+    }
 });
 gtag('event', 'Login', {
     event_category: 'KiwiV2',
@@ -108,6 +113,20 @@ kiwi.plugin('analytics', function(kiwi) {
     });
 
     kiwi.on('irc.registered', function() {
+        let network = kiwi.state.getActiveNetwork();
+        let userObj = kiwi.state.getUser(network.id, network.nick);
+        let asl = (userObj && userObj.asl) ? userObj.asl : {};
+
+        gtag('config', 'UA-36932919-2', {
+            'user_id': network.username || 'unknown'
+        });
+
+        gtag('set', {
+            'age':    asl.a || 'unknown',
+            'gender': asl.s || 'unknown',
+            'city':   asl.l || 'unknown',
+        });
+
         gtag('event', 'Server', {
             event_category: 'KiwiV2',
             event_label: 'Connected',
