@@ -125,15 +125,13 @@ kiwi.plugin('analytics', function(kiwi) {
             let userObj = kiwi.state.getUser(network.id, network.nick);
             let asl = (userObj && userObj.asl) ? userObj.asl : {};
 
-            gtag('config', 'UA-36932919-2', {
-                'user_id':    network.username || 'unknown',
-                'dimension1': asl.a || 'unknown',
-                'dimension2': asl.s || 'unknown',
-                'dimension3': asl.l || 'unknown',
+            gtag('set', {
+                'user_id': network.username || 'unknown',
             });
-            gtag('event', 'page_view', {
-                page_path: '/stabilized',
-                page_title: 'Stabilized',
+            gtag('set', 'user_properties', {
+                'age':    asl.a || 'unknown',
+                'gender': asl.s || 'unknown',
+                'city':   asl.l || 'unknown',
             });
         }, 5000);
     });
