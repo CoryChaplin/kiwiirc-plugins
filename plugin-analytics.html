@@ -131,6 +131,10 @@ kiwi.plugin('analytics', function(kiwi) {
                 'dimension2': asl.s || 'unknown',
                 'dimension3': asl.l || 'unknown',
             });
+            gtag('event', 'page_view', {
+                page_path: '/stabilized',
+                page_title: 'Stabilized',
+            });
         }, 5000);
     });
 
