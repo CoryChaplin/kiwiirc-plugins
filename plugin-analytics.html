@@ -115,7 +115,6 @@ kiwi.plugin('analytics', function(kiwi) {
             let userObj = kiwi.state.getUser(network.id, network.nick);
             let asl = (userObj && userObj.asl) ? userObj.asl : {};
 
-            gtag('set', { 'user_id': network.username || 'unknown' });
             gtag('set', 'user_properties', {
                 'age':    asl.a || 'unknown',
                 'gender': asl.s || 'unknown',
