@@ -130,6 +130,14 @@ kiwi.plugin('analytics', function(kiwi) {
     });
 
     if (anyGameEnabled) {
+        kiwi.on('plugin-kiwi-games.game-proposed', function(data) {
+            gtag('event', 'Games', {
+                event_category: data.game,
+                event_label: 'proposed',
+                value: true
+            });
+        });
+
         kiwi.on('plugin-kiwi-games.game-started', function(data) {
             gtag('event', 'Games', {
                 event_category: data.game,
