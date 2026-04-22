@@ -124,6 +124,29 @@ kiwi.plugin('analytics', function(kiwi) {
 
     });
 
+    const gamesCfg = (kiwi.state.settings && kiwi.state.settings['plugin_kiwi_games']) || null;
+    const anyGameEnabled = gamesCfg && ['tictactoe', 'connectfour', 'pictionary'].some(function(id) {
+        return !gamesCfg[id] || gamesCfg[id].enabled !== false;
+    });
+
+    if (anyGameEnabled) {
+        kiwi.on('plugin-kiwi-games.game-started', function(data) {
+            gtag('event', 'Games', {
+                event_category: data.game,
+                event_label: 'started',
+                value: true
+            });
+        });
+
+        kiwi.on('plugin-kiwi-games.game-completed', function(data) {
+            gtag('event', 'Games', {
+                event_category: data.game,
+                event_label: 'completed',
+                value: true
+            });
+        });
+    }
+
     // Count minutes
     setInterval(function(){
         if(kiwi.state.getActiveNetwork() !== undefined &&
