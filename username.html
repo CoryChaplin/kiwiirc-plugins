@@ -1,10 +1,10 @@
 <script>
-    let Misc = kiwi.require('helpers/Misc');
+    const Misc = kiwi.require('helpers/Misc');
 
     function randString(n) {
-        var text = '';
-        var possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        for (var i = 0; i < n; i++) {
+        let text = '';
+        const possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < n; i++) {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return text;
@@ -23,9 +23,9 @@
 
     function getSource() {
         if (Misc.queryStringVal('origine') !== undefined) {
-            let origin = Misc.queryStringVal('origine');
+            const origin = Misc.queryStringVal('origine');
             // List of EuropNet's source prefixes
-            let prefixes = {'3': 'c', '4': 'e', '5': 'f', '6': 'a', '7': 'c', '8': 'e', '9': 'e', '10': 'l',
+            const prefixes = {'3': 'c', '4': 'e', '5': 'f', '6': 'a', '7': 'c', '8': 'e', '9': 'e', '10': 'l',
                 '11': 'l', '12': 'l', '13': 'l', '14': 'v', '15': 'm', '16': 'x', '17': 'z'};
             if (origin !== '' && prefixes[origin] !== undefined) return prefixes[origin];
         }
@@ -57,9 +57,9 @@
 
     // Cookies
     function createCookie(name, value, days) {
-        var expires = "";
+        let expires = "";
         if (days) {
-            var date = new Date();
+            const date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toGMTString();
         }
@@ -67,12 +67,12 @@
     }
 
     function readCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
         }
         return null;
     }
