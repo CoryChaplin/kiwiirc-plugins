@@ -2,113 +2,68 @@
     let Misc = kiwi.require('helpers/Misc');
 
     function randString(n) {
-        if (!n) n = 5;
-
         var text = '';
         var possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
-
-        for(var i=0; i < n; i++) {
+        for (var i = 0; i < n; i++) {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
-
         return text;
     }
 
-    function deterministicString(n) {
-        if (!n) n = 5;
+    /*
+        Ident IRC : 11 chars — [source][browser][os][8 random]
 
-        /*
-            Source : c = chat-fr, e = europnet, a = andromede, f = fantasya, l = 123love, 
-            v = loovchat, o = other, m = Mikochat, x = xchat-fr, z = mobile app
-            Browser : f = Firefox, c = Chrome, s = Safari, e = Edge, o = other
-            OS : w = Windows, m = MacOS, l = Linux, a = Android, i = iOS, o = other
-            Device type : d = Desktop, m = Mobile
-            Network type : m = Mobile, o = Other, u = Unknown
-            Browser language : f = fr, e = en, o = other
-         */
-        let source = getSource();
-        let browser = getBrowser();
-        let os = getOs();
-        let device_type = getDeviceType();
-        let connection_type = getConnectionType();
-        let language = getLanguage();
-
-        return source + browser + os + device_type + connection_type + language + randString(n-6);
-    }
+        Source  : c = chat-fr, e = europnet, a = andromede, f = fantasya, l = 123love,
+                  v = loovchat, o = other, m = Mikochat, x = xchat-fr, z = mobile app,
+                  d = direct (direct access without origin nor chatnow)
+        Browser : c = Chrome, f = Firefox, s = Safari, e = Edge, b = Brave,
+                  i = Internet Explorer, p = Opera, o = other
+        OS      : w = Windows, m = MacOS, l = Linux, a = Android, i = iOS, o = other
+     */
 
     function getSource() {
-        let origin;
-
-        if(Misc.queryStringVal('origine') !== undefined) {
-            origin = Misc.queryStringVal('origine');
-
+        if (Misc.queryStringVal('origine') !== undefined) {
+            let origin = Misc.queryStringVal('origine');
             // List of EuropNet's source prefixes
             let prefixes = {'3': 'c', '4': 'e', '5': 'f', '6': 'a', '7': 'c', '8': 'e', '9': 'e', '10': 'l',
                 '11': 'l', '12': 'l', '13': 'l', '14': 'v', '15': 'm', '16': 'x', '17': 'z'};
-
-            if(origin !== '' && prefixes[origin] !== undefined) return prefixes[origin];
-
+            if (origin !== '' && prefixes[origin] !== undefined) return prefixes[origin];
         }
-        return 'o';
+        if (Misc.queryStringVal('chatnow') === '1') return 'o';
+        return 'd';
     }
+
     function getBrowser() {
-        // CHROME
-        if (/Chrome/.test(navigator.userAgent)) return 'c';
-        // FIREFOX
-        else if (/Firefox/.test(navigator.userAgent)) return 'f';
-        // INTERNET EXPLORER
-        else if (/MSIE/.test(navigator.userAgent)) return 'i';
-        // EDGE
-        else if (/Edge/.test(navigator.userAgent)) return 'e';
-        // SAFARI
-        else if (/Safari/.test(navigator.userAgent)) return 's';
-        // OPERA
-        else if (/Opera/.test(navigator.userAgent)) return 'p';
-        // YANDEX BROWSER
-        else if (/YaBrowser/.test(navigator.userAgent)) return 'y';
-        // OTHERS
-        else return 'o';
+        const ua = navigator.userAgent;
+        if (/OPR\/|Opera/.test(ua))    return 'p';  // Opera (OPR/ = modern, Opera = legacy)
+        if (/Edg/.test(ua))            return 'e';  // Edge : Edge/, Edg/, EdgA/, EdgiOS/
+        if (navigator.brave)           return 'b';  // Brave: UA is identical to Chrome, only reliable detection
+        if (/Chrome|CriOS/.test(ua))   return 'c';  // Chrome desktop + Chrome iOS (CriOS)
+        if (/Firefox|FxiOS/.test(ua))  return 'f';  // Firefox desktop + Firefox iOS (FxiOS)
+        if (/Trident\/|MSIE/.test(ua)) return 'i';  // IE11 (Trident/) + IE≤10 (MSIE)
+        if (/Safari/.test(ua))         return 's';
+        return 'o';
     }
 
     function getOs() {
-        if (/Win/.test(navigator.userAgent)) return 'w';
-        else if (/Mac/.test(navigator.userAgent)) return 'm';
-        else if (/Linux/.test(navigator.userAgent)) return 'l';
-        else if (/android/.test(navigator.userAgent)) return 'a';
-        else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return 'i';
-        else return 'o';
-    }
-
-    function getDeviceType() {
-        if (/mobile/i.test(navigator.userAgent)) return 'm';
-        else return 'd';
-    }
-
-    function getConnectionType() {
-        if(navigator.connection !== undefined && navigator.connection.effectivetype !== undefined){
-            if(/g/.test(navigator.connection.effectivetype)) return 'm';
-            else return 'o';
-        } else {
-            return 'u';
-        }
-    }
-
-    function getLanguage() {
-        if(/fr/.test(navigator.language)) return 'f';
-        else if(/en/.test(navigator.language)) return 'e';
-        else return 'o';
+        const ua = navigator.userAgent;
+        if (/Win/.test(ua))              return 'w';
+        if (/Android/i.test(ua))         return 'a';  // before Linux: Android UAs contain "Linux"
+        if (/iPad|iPhone|iPod/.test(ua)) return 'i';
+        if (/Mac/.test(ua))              return 'm';
+        if (/Linux/.test(ua))            return 'l';
+        return 'o';
     }
 
     // Cookies
     function createCookie(name, value, days) {
+        var expires = "";
         if (days) {
             var date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            var expires = "; expires=" + date.toGMTString();
+            expires = "; expires=" + date.toGMTString();
         }
-        else var expires = "";
-
-        document.cookie = name + "=" + value + expires + "; path=/";
+        document.cookie = name + "=" + value + expires + "; path=/; SameSite=Lax; Secure";
     }
 
     function readCookie(name) {
@@ -126,25 +81,29 @@
         createCookie(name, "", -1);
     }
 
+    function getStoredIdent() {
+        let ls = null;
+        try {
+            ls = window.localStorage.getItem('username');
+        } catch(e) {}
+        return ls || readCookie('username');
+    }
+
+    function syncToAllStorages(value) {
+        try {
+            window.localStorage.setItem('username', value);
+        } catch(e) {}
+        createCookie('username', value, 365);
+    }
+
     function getUsername() {
-
-        var cookie = readCookie('username');
-        if (!cookie) {
-            cookie =  deterministicString(9);
-            createCookie('username', cookie, 30);
+        const stored = getStoredIdent();
+        if (stored && stored.length === 11) {
+            syncToAllStorages(stored);
+            return stored;
         }
-
-        var username = cookie;
-        if (!'localStorage' in window) {
-            return username;
-        }
-
-        username = window.localStorage.getItem('username');
-        if (!username) {
-            username = deterministicString(9);
-            window.localStorage.setItem('username', username);
-        }
-
+        const username = getSource() + getBrowser() + getOs() + randString(8);
+        syncToAllStorages(username);
         return username;
     }
 
