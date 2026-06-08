@@ -59,7 +59,6 @@ function doAds() {
                     '#123love', '#andromede', '#algeriens', '#maroc', '#afrique',
                     '#rencontres', '#transgenre', '#gay&lesb'].includes(value.name);
         }) !== undefined)) {
-            console.log('staring');
             gtag('event', 'Ads', {
                 event_category: 'Loaded',
                 event_label: 'IgniteConsent',
@@ -83,6 +82,7 @@ function doAds() {
                 })();
 
             loadAds();
+            document.querySelector('#navbar li.xflirt-link').style.display = '';
     }
 }
 
