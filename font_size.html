@@ -19,26 +19,26 @@
             template: '#font-size',
             data() {
                 return {
-                    size: 90,
+                    // Global zoom factor; 1 = the theme's validated baseline.
+                    scale: 1.0,
                 };
             },
             methods: {
                 increaseFont: function increaseFont() {
-                    if(this.size < 140) {
-                        this.size = this.size + 10;
-                        console.log('reduce', this.size);
+                    if(this.scale < 1.5) {
+                        this.scale = Math.round((this.scale + 0.1) * 10) / 10;
                     }
-                    this.resizeFont()
+                    this.applyScale()
                 },
                 decreaseFont: function decreaseFont() {
-                    if(this.size > 70) {
-                        this.size = this.size - 10;
-                        console.log('increase', this.size);
+                    if(this.scale > 0.8) {
+                        this.scale = Math.round((this.scale - 0.1) * 10) / 10;
                     }
-                    this.resizeFont()
+                    this.applyScale()
                 },
-                resizeFont: function resizeFont() {
-                    document.querySelector('.kiwi-wrap').style.fontSize = this.size + '%';
+                applyScale: function applyScale() {
+                    // Drive the theme's --ui-scale so rem (fil) and native px text zoom together.
+                    document.documentElement.style.setProperty('--ui-scale', this.scale);
                 },
             },
         });
