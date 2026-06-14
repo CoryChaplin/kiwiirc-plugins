@@ -54,15 +54,17 @@
                 mode: getMode(),
             },
             computed: {
-                // Icon reflects the chosen mode (Font Awesome 4): half-circle = auto.
+                // Icon shows the action (what a click switches TO), not the current mode:
+                // light → moon (click to go dark), dark → sun (click to go light).
                 iconClass() {
-                    if (this.mode === 'dark') return 'fa-moon-o';
-                    if (this.mode === 'light') return 'fa-sun-o';
+                    if (this.mode === 'light') return 'fa-moon-o';
+                    if (this.mode === 'dark') return 'fa-sun-o';
                     return 'fa-adjust';
                 },
+                // Text matches the icon: it announces the action, not the current mode.
                 title() {
                     if (this.mode === 'auto') return 'Thème : automatique (suit le système)';
-                    return this.mode === 'dark' ? 'Thème : sombre' : 'Thème : clair';
+                    return this.mode === 'dark' ? 'Passer en clair' : 'Passer en sombre';
                 },
             },
             methods: {
