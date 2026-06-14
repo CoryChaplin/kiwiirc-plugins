@@ -1,0 +1,123 @@
+<template id="darkmode">
+  <div class="kiwi-statebrowser-btnChgTheme">
+    <a @click="buttonClicked" :title="title" data-step="5">
+        <i class="fa" :class="iconClass" aria-hidden="true"></i>
+    </a>
+  </div>
+</template>
+
+<script>
+    // Color-mode toggle for the EuropNet theme.
+    // The plugin owns the logic and writes a single resolved attribute on <html>:
+    //   document.documentElement.dataset.mode = "light" | "dark"
+    // The theme CSS only reads :root[data-mode="dark"] — no theme swapping.
+    // Mode is persisted in localStorage; dark is opt-in via the manual toggle.
+    //
+    // OS auto-switch TEMPORARILY DISABLED (founder: don't surprise existing users by
+    // flipping them to dark from their system setting). The auto machinery below is
+    // kept dormant — to re-enable later: add 'auto' back to MODES and default to it.
+    kiwi.plugin('darkmode', function(kiwi, log) {
+        const STORAGE_KEY = 'europnet-color-mode';
+        const DARK_MEDIA = '(prefers-color-scheme: dark)';
+        const MODES = ['light', 'dark']; // 'auto' removed for now — manual light/dark only
+        const DEFAULT_MODE = 'light';
+
+        function getMode() {
+            let stored;
+            try { stored = window.localStorage.getItem(STORAGE_KEY); } catch (e) { stored = null; }
+            return MODES.includes(stored) ? stored : DEFAULT_MODE;
+        }
+
+        function setMode(mode) {
+            try { window.localStorage.setItem(STORAGE_KEY, mode); } catch (e) { /* storage blocked — session only */ }
+        }
+
+        function osIsDark() {
+            return !!(window.matchMedia && window.matchMedia(DARK_MEDIA).matches);
+        }
+
+        function resolve(mode) {
+            return mode === 'auto' ? (osIsDark() ? 'dark' : 'light') : mode;
+        }
+
+        // Apply the resolved mode to <html> so the theme CSS can react.
+        function apply(mode) {
+            document.documentElement.dataset.mode = resolve(mode);
+        }
+
+        // Resolve + apply on startup before the button mounts.
+        apply(getMode());
+
+        const button = new kiwi.Vue({
+            template: '#darkmode',
+            data: {
+                mode: getMode(),
+            },
+            computed: {
+                // Icon reflects the chosen mode (Font Awesome 4): half-circle = auto.
+                iconClass() {
+                    if (this.mode === 'dark') return 'fa-moon-o';
+                    if (this.mode === 'light') return 'fa-sun-o';
+                    return 'fa-adjust';
+                },
+                title() {
+                    if (this.mode === 'auto') return 'Thème : automatique (suit le système)';
+                    return this.mode === 'dark' ? 'Thème : sombre' : 'Thème : clair';
+                },
+            },
+            methods: {
+                // Cycle auto → sombre → clair → auto. Manual choice overrides the OS.
+                buttonClicked() {
+                    const next = MODES[(MODES.indexOf(this.mode) + 1) % MODES.length];
+                    this.mode = next;
+                    setMode(next);
+                    apply(next);
+                    if (kiwi.state.ui.is_narrow) {
+                        kiwi.state.$emit('statebrowser.hide');
+                    }
+                },
+            },
+        });
+
+        // Follow the OS only while in auto (the icon shows the chosen mode, not the OS state).
+        const mql = window.matchMedia(DARK_MEDIA);
+        const onOsChange = () => {
+            if (getMode() === 'auto') apply('auto');
+        };
+        if (mql.addEventListener) {
+            mql.addEventListener('change', onOsChange);
+        } else if (mql.addListener) {
+            mql.addListener(onOsChange); // older Safari
+        }
+
+        kiwi.addUi('browser', button.$mount().$el);
+    });
+</script>
+<style media="screen">
+/* Absolute top-rail control, mirroring the native settings cog
+   (.kiwi-statebrowser-appsettings, also absolute at top:0 in StateBrowser.vue).
+   The tools container has no layout, so flowing isn't an option here.
+   left clears the cog (32px) + usermenu — hand-tuned offset, no flex source to hook. */
+.kiwi-statebrowser-btnChgTheme {
+    position: absolute;
+    top: 0;
+    left: 86px;
+    z-index: 1;
+    width: 32px;
+    line-height: 32px;
+    text-align: center;
+    cursor: pointer;
+}
+
+/* Rail ink tokens — the rail stays dark in both color modes, so --rail-fg reads in either.
+   Muted at rest, full on hover, matching the rest of the rail's icon idiom. */
+.kiwi-statebrowser-btnChgTheme .fa {
+    font-size: 17px;
+    color: var(--rail-muted);
+    transition: color .2s;
+}
+
+.kiwi-statebrowser-btnChgTheme a:hover .fa {
+    color: var(--rail-fg);
+}
+</style>
