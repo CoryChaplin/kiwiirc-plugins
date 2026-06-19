@@ -141,5 +141,42 @@
 <script>
     kiwi.plugin('navbar', function (kiwi) {
         document.body.appendChild(document.querySelector('#navbar'));
+
+        // On narrow screens, default the message layout to "modern". We only
+        // touch the instance default (state.settings.*), never the user's own
+        // settings (state.user_settings.*): if the user already picked a layout
+        // in their preferences, we leave it untouched.
+        var state = kiwi.state;
+        var SETTING = 'buffers.messageLayout';
+        var NARROW_LAYOUT = 'modern';
+
+        // Instance default layout (config.json), restored when the screen
+        // becomes wide again.
+        var defaultLayout = state.getSetting('settings.' + SETTING);
+
+        function userHasOverridden() {
+            return typeof state.getSetting('user_settings.' + SETTING) !== 'undefined';
+        }
+
+        function applyResponsiveLayout() {
+            if (userHasOverridden()) {
+                return;
+            }
+
+            var wanted = state.ui.is_narrow ? NARROW_LAYOUT : defaultLayout;
+            if (state.getSetting('settings.' + SETTING) !== wanted) {
+                state.setSetting('settings.' + SETTING, wanted);
+            }
+        }
+
+        applyResponsiveLayout();
+
+        // React to window resize / mobile rotation.
+        state.$watch(function () { return state.ui.is_narrow; }, applyResponsiveLayout);
+
+        // React if the user sets/clears their own layout setting later on.
+        state.$watch(function () {
+            return state.getSetting('user_settings.' + SETTING);
+        }, applyResponsiveLayout);
     });
 </script>
