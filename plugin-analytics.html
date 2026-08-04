@@ -32,6 +32,31 @@ ga('send', {
     eventLabel: 'cats.mp4'
 }); */
 
+/*
+    Ident layout, forged by the `username` plugin:
+    [source][browser][os][8 random] — 11 chars.
+    The mobile app embeds this same web client, so its events land on the web
+    stream and are otherwise indistinguishable from a browser. The source char
+    is the only marker we have.
+*/
+const IDENT_SOURCES = {
+    c: 'chat-fr',  e: 'europnet', a: 'andromede', f: 'fantasya',
+    l: '123love',  v: 'loovchat', m: 'mikochat',  x: 'xchat-fr',
+    z: 'app-mobile', o: 'other',  d: 'direct',
+};
+
+function identProperties(network) {
+    const ident = (network && network.username) || '';
+    if (ident.length !== 11) {
+        return { client: 'unknown', source: 'unknown' };
+    }
+    const source = ident.charAt(0);
+    return {
+        client: source === 'z' ? 'app' : 'web',
+        source: IDENT_SOURCES[source] || 'unknown',
+    };
+}
+
 function loadAds() {
     let gadScript = document.createElement('script');
     gadScript.setAttribute('src', 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7308685930931350');
@@ -91,7 +116,11 @@ function doAds() {
 
 /* Bind kiwi events to GA */
 kiwi.plugin('analytics', function(kiwi) {
-    kiwi.on('network.connecting', function() {
+    kiwi.on('network.connecting', function(event) {
+        // Set as early as possible: unlike ASL below, these are known upfront,
+        // so every subsequent event carries them.
+        gtag('set', 'user_properties', identProperties(event && event.network));
+
         gtag('event', 'Login', {
             event_category: 'KiwiV2',
             event_label: 'Connecting',
@@ -100,6 +129,10 @@ kiwi.plugin('analytics', function(kiwi) {
     });
 
     kiwi.on('irc.registered', function(event, network) {
+        // Re-set: `network` is guaranteed here, so this covers the case where
+        // the connecting handler ran without one.
+        gtag('set', 'user_properties', identProperties(network));
+
         gtag('event', 'Server', {
             event_category: 'KiwiV2',
             event_label: 'Connected',
