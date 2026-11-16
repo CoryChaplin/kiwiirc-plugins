@@ -1,15 +1,15 @@
 <template id="font-size">
     <div class="kiwi-format-buttons">
-        <a class="kiwi-decrease-font" title="Reduce text size"
+        <button type="button" class="kiwi-decrease-font" title="Réduire le texte" aria-label="Réduire le texte"
              @click="decreaseFont"
         >
             A<sup>-</sup>
-        </a>
-        <a class="kiwi-increase-font" title="Increase text size"
+        </button>
+        <button type="button" class="kiwi-increase-font" title="Agrandir le texte" aria-label="Agrandir le texte"
              @click="increaseFont"
         >
             A<sup>+</sup>
-        </a>
+        </button>
     </div>
 </template>
 <script>
@@ -42,41 +42,25 @@
                 },
             },
         });
-        kiwi.addUi('browser', fontSize.$mount().$el);
+        kiwi.addUi('browser_foot', fontSize.$mount().$el);
     });
 </script>
 
 <style>
-.kiwi-statebrowser-appsettings, .kiwi-statebrowser-usermenu--open {
-    z-index: 1;
-}
+/* Two controls, flowing in the rail foot row; the theme paints them. */
 .kiwi-format-buttons {
-    position: absolute;
-    top: 5px;
-    right: 2px;
-    display: block;
-}
-.kiwi-decrease-font,
-.kiwi-increase-font {
-    border: 1px solid #555;
-    background-color: #cecece;
-    border-radius: 3px;
-    color: #555;
-    cursor: pointer;
-    display: inline-block;
-    font-size: 1.3em;
-    margin: 1px;
-    padding: 0 4px 2px !important;
-    opacity: 0.5;
-}
-.kiwi-decrease-font:hover,
-.kiwi-increase-font:hover {
-    opacity: 1;
+    display: flex;
 }
 
-@media screen and (max-width: 769px) {
-    .kiwi-format-buttons {
-        right: 20px;
-    }
+.kiwi-decrease-font,
+.kiwi-increase-font {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 1.1em;
+    cursor: pointer;
 }
 </style>

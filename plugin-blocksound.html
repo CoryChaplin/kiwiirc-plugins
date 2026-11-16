@@ -1,9 +1,15 @@
 <template id="block-sound">
   <div class="kiwi-statebrowser-btnblocksound">
-      <a @click="buttonClicked">
-          <i v-if="blockSOUND" class="fa fa-bell-slash kiwi-statebrowser-btnRedBS" aria-hidden="true" title="Activer les notifications sonores"></i>
-          <i v-else class="fa fa-bell" aria-hidden="true" title="Désactiver les notifications sonores"></i>
-      </a>
+      <button
+          type="button"
+          :aria-pressed="blockSOUND ? 'true' : 'false'"
+          aria-label="Couper les notifications sonores"
+          :title="blockSOUND ? 'Activer les notifications sonores' : 'Désactiver les notifications sonores'"
+          @click="buttonClicked"
+      >
+          <i v-if="blockSOUND" class="fa fa-bell-slash kiwi-statebrowser-btnRedBS" aria-hidden="true"></i>
+          <i v-else class="fa fa-bell" aria-hidden="true"></i>
+      </button>
   </div>
 </template>
 
@@ -29,27 +35,21 @@ kiwi.plugin('block_sound', function(kiwi, log) {
             }
         },
     });
-    kiwi.addUi('browser', button.$mount().$el);
+    kiwi.addUi('browser_foot', button.$mount().$el);
 });
 </script>
 
 <style>
-.kiwi-statebrowser-btnblocksound {
-    position: absolute;
-    top: 0px;
-    left: 56px;
-    z-index: 1002;
-    width: 32px;
-    text-align: center;
-    cursor: pointer;
-    transition: background .2s,opacity .2s;
-    line-height: 32px;
+/* Flows in the rail foot row; the theme paints it. */
+.kiwi-statebrowser-btnblocksound button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
     font-size: 18px;
-}
-
-.kiwi-statebrowser-btnblocksound:hover {
-    background-color: hsla(0,0%,50.2%,.2);
-    opacity: 1;
+    cursor: pointer;
 }
 
 .kiwi-statebrowser-btnRedBS {

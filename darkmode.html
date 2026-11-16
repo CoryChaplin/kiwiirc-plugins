@@ -1,8 +1,8 @@
 <template id="darkmode">
   <div class="kiwi-statebrowser-btnChgTheme">
-    <a @click="buttonClicked" :title="title" data-step="5">
+    <button type="button" :title="title" :aria-label="title" @click="buttonClicked">
         <i class="fa" :class="iconClass" aria-hidden="true"></i>
-    </a>
+    </button>
   </div>
 </template>
 
@@ -92,34 +92,23 @@
             mql.addListener(onOsChange); // older Safari
         }
 
-        kiwi.addUi('browser', button.$mount().$el);
+        kiwi.addUi('browser_foot', button.$mount().$el);
     });
 </script>
 <style media="screen">
-/* Absolute top-rail control, mirroring the native settings cog
-   (.kiwi-statebrowser-appsettings, also absolute at top:0 in StateBrowser.vue).
-   The tools container has no layout, so flowing isn't an option here.
-   left clears the cog (32px) + usermenu — hand-tuned offset, no flex source to hook. */
-.kiwi-statebrowser-btnChgTheme {
-    position: absolute;
-    top: 0;
-    left: 86px;
-    z-index: 1;
-    width: 32px;
-    line-height: 32px;
-    text-align: center;
+/* Flows in the rail foot row; the theme paints it. The icon announces the action
+   (moon = go dark), so no pressed state: a pressed look under "go light" would lie. */
+.kiwi-statebrowser-btnChgTheme button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
     cursor: pointer;
 }
 
-/* Rail ink tokens — the rail stays dark in both color modes, so --rail-fg reads in either.
-   Muted at rest, full on hover, matching the rest of the rail's icon idiom. */
 .kiwi-statebrowser-btnChgTheme .fa {
     font-size: 17px;
-    color: var(--rail-muted);
-    transition: color .2s;
-}
-
-.kiwi-statebrowser-btnChgTheme a:hover .fa {
-    color: var(--rail-fg);
 }
 </style>

@@ -1,9 +1,15 @@
 <template id="block-pv">
   <div class="kiwi-statebrowser-btnblockmp">
-      <a @click="buttonClicked">
-          <i v-if="blockPM" class="fa fa-lock kiwi-statebrowser-btnRedBMP" aria-hidden="true" title="Débloquer les PVS"></i>
-          <i v-else class="fa fa-unlock-alt" aria-hidden="true" title="Bloquer les PVS"></i>
-      </a>
+      <button
+          type="button"
+          :aria-pressed="blockPM ? 'true' : 'false'"
+          aria-label="Bloquer les messages privés"
+          :title="blockPM ? 'Débloquer les PVS' : 'Bloquer les PVS'"
+          @click="buttonClicked"
+      >
+          <i v-if="blockPM" class="fa fa-lock kiwi-statebrowser-btnRedBMP" aria-hidden="true"></i>
+          <i v-else class="fa fa-unlock-alt" aria-hidden="true"></i>
+      </button>
   </div>
 </template>
 
@@ -29,27 +35,21 @@ kiwi.plugin('block_pv', function(kiwi, log) {
             }
         },
     });
-    kiwi.addUi('browser', button.$mount().$el);
+    kiwi.addUi('browser_foot', button.$mount().$el);
 });
 </script>
 
 <style>
-.kiwi-statebrowser-btnblockmp {
-    position: absolute;
-    top: 0px;
-    left: 28px;
-    z-index: 1002;
-    font-size: 20px;
-    width: 32px;
-    text-align: center;
+/* Flows in the rail foot row; the theme paints it. */
+.kiwi-statebrowser-btnblockmp button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 18px;
     cursor: pointer;
-    transition: background .2s,opacity .2s;
-    line-height: 34px;
-}
-
-.kiwi-statebrowser-btnblockmp:hover {
-    background-color: hsla(0,0%,50.2%,.2);
-    opacity: 1;
 }
 
 .kiwi-statebrowser-btnRedBMP {
