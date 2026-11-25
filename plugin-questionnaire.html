@@ -65,6 +65,10 @@
  *   maxDisplays   sessions in which an unanswered card may appear (2)
  *   declaredRate  share of sessions without history that get the card (0 = off)
  *
+ * Preview for testers: ?questionnaire=apercu in the page URL shows the card at once, for
+ * that session, whatever the activity and the marker; nothing is stored, and the wave sent
+ * to the form gets a "-test" suffix so these answers stay out of the analysis.
+ *
  * Needs plugin-asl's read API (kiwi.state.pluginASL: activity, profile, universe). Only
  * classes leave the browser, in the form URL: never the nick, the ident or the exact age.
  */
@@ -80,7 +84,8 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
         log.error('questionnaire: settings.questionnaire.vague and .formId are required');
         return;
     }
-    var DELAY_MS = Number(setting('delayMinutes', 10)) * 60000;
+    var PREVIEW = /[?&]questionnaire=apercu(&|$)/.test(window.location.search);
+    var DELAY_MS = PREVIEW ? 0 : Number(setting('delayMinutes', 10)) * 60000;
     var MAX_DISPLAYS = Number(setting('maxDisplays', 2));
     var DECLARED_RATE = Number(setting('declaredRate', 0));
     var STORAGE_KEY = 'questionnaire_state';
@@ -95,6 +100,9 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
 
     // ---- per-wave marker, kept next to plugin-asl's activity counter ----
     function loadMarker() {
+        if (PREVIEW) {
+            return { vague: WAVE, etat: null, affichages: 0 };
+        }
         try {
             var data = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
             if (data && data.vague === WAVE) {
@@ -104,6 +112,9 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
         return { vague: WAVE, etat: null, affichages: 0 };
     }
     function saveMarker(marker) {
+        if (PREVIEW) {
+            return;
+        }
         try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(marker));
         } catch (e) { /* unavailable: the card may come back, never worse */ }
@@ -121,12 +132,17 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
     }
 
     function eligibleSource() {
+        if (PREVIEW) {
+            return 'apercu';
+        }
         var marker = loadMarker();
         if (marker.etat || marker.affichages >= MAX_DISPLAYS) {
             return null;
         }
         var api = asl();
-        if (!api || !api.activity || !api.profile() ) {
+        // An unreadable profile never excludes anyone: the form is the same for everybody,
+        // and the missing fields simply stay out of the URL.
+        if (!api || !api.activity) {
             return null;
         }
         var activity = api.activity();
@@ -164,7 +180,9 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
         }, 3000);
     }
 
-    kiwi.on('irc.registered', function () {
+    // Start on registration, or at once if a network is already connected when the plugin
+    // starts (a bouncer session can be up before plugins load).
+    function start() {
         if (shared.phase !== 'idle') {
             return;
         }
@@ -177,7 +195,11 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
             }
             waitForCalm();
         }, DELAY_MS);
-    });
+    }
+    kiwi.on('irc.registered', start);
+    if (kiwi.state.networks.some(function (n) { return n.state === 'connected'; })) {
+        start();
+    }
 
     // ---- the form URL: classes only ----
     function isTeam(network) {
@@ -194,8 +216,8 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
 
     function formFields() {
         var api = asl();
-        var profile = api.profile() || {};
-        var activity = api.activity();
+        var profile = (api && api.profile && api.profile()) || {};
+        var activity = api && api.activity ? api.activity() : { activeDays: 1, window: 1 };
         var network = kiwi.state.getActiveNetwork();
         var ident = '';
         try { ident = window.localStorage.getItem('irc_ident') || ''; } catch (e) { /* none */ }
@@ -203,12 +225,12 @@ kiwi.plugin('questionnaire', function (kiwi, log) {
         var fields = {
             age: profile.age,
             genre: profile.gender,
-            univers: api.universe(),
+            univers: api && api.universe ? api.universe() : undefined,
             provenance: SOURCES[ident.charAt(0)],
             appareil: DEVICES[ident.charAt(2)],
             freq_source: shared.source,
             equipe: isTeam(network) ? 'oui' : 'non',
-            vague: WAVE,
+            vague: PREVIEW ? WAVE + '-test' : WAVE,
         };
         if (shared.source === 'observee') {
             fields.frequence = activity.activeDays;
