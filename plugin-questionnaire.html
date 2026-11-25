@@ -1,0 +1,422 @@
+<template id="questionnaire-card">
+  <div
+      v-if="visible"
+      class="invite kiwi-questionnaire-card"
+      :class="{ enter: entering }"
+      :role="announce ? 'status' : null"
+  >
+      <div class="inv-av sys" aria-hidden="true"><i class="fa fa-comments"></i></div>
+      <div class="inv-body">
+          <div class="inv-eyebrow"><i class="fa fa-bullhorn" aria-hidden="true"></i>EuropNet</div>
+          <span class="inv-what">Ton avis sur le tchat EuropNet</span><br>6 questions, 2 minutes, anonyme.
+      </div>
+      <div class="inv-actions">
+          <button type="button" class="btn-ghost sm" @click="decline">Non merci</button>
+          <button type="button" class="btn-cta sm" @click="answer">Donner mon avis</button>
+      </div>
+  </div>
+</template>
+
+<template id="questionnaire-modal">
+  <div class="kiwi-questionnaire-host">
+      <div v-if="open" class="overlay open kiwi-questionnaire-overlay" @click.self="close">
+          <div
+              ref="dialog"
+              class="modal kiwi-questionnaire-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="kiwi-questionnaire-title"
+              tabindex="-1"
+              @keydown="onKeydown"
+          >
+              <div class="modal-head">
+                  <div class="modal-sh" aria-hidden="true"><i class="fa fa-comments"></i></div>
+                  <div id="kiwi-questionnaire-title" class="modal-title">Ton avis sur le tchat EuropNet</div>
+                  <button type="button" class="modal-x" aria-label="Fermer" @click="close">
+                      <i class="fa fa-times" aria-hidden="true"></i>
+                  </button>
+              </div>
+              <iframe class="kiwi-questionnaire-frame" :src="embedUrl" title="Questionnaire"></iframe>
+              <div class="modal-foot kiwi-questionnaire-foot">
+                  <span>Le formulaire ne s'affiche pas ?</span>
+                  <a :href="tabUrl" target="_blank" rel="noopener">
+                      Ouvrir dans un onglet <i class="fa fa-external-link" aria-hidden="true"></i>
+                  </a>
+              </div>
+          </div>
+      </div>
+      <div v-if="thanks" class="toast-host">
+          <div class="toast success" role="status">
+              <i class="ic fa fa-check" aria-hidden="true"></i>
+              <span class="msg">Merci ! Tes réponses sont bien parties.</span>
+          </div>
+      </div>
+  </div>
+</template>
+
+<script>
+/*
+ * Survey invitation. Loaded = the wave is open; removed from the config = closed.
+ *
+ * Config, under settings.questionnaire:
+ *   vague         wave id, e.g. "2026-12" (a new id makes everyone eligible again)
+ *   formId        Tally form id
+ *   delayMinutes  minutes after registration before the card may appear (10)
+ *   maxDisplays   sessions in which an unanswered card may appear (2)
+ *   declaredRate  share of sessions without history that get the card (0 = off)
+ *
+ * Needs plugin-asl's read API (kiwi.state.pluginASL: activity, profile, universe). Only
+ * classes leave the browser, in the form URL: never the nick, the ident or the exact age.
+ */
+kiwi.plugin('questionnaire', function (kiwi, log) {
+    function setting(name, fallback) {
+        var value = kiwi.state.getSetting('settings.questionnaire.' + name);
+        return (value === undefined || value === null || value === '') ? fallback : value;
+    }
+
+    var WAVE = String(setting('vague', ''));
+    var FORM_ID = String(setting('formId', ''));
+    if (!WAVE || !FORM_ID) {
+        log.error('questionnaire: settings.questionnaire.vague and .formId are required');
+        return;
+    }
+    var DELAY_MS = Number(setting('delayMinutes', 10)) * 60000;
+    var MAX_DISPLAYS = Number(setting('maxDisplays', 2));
+    var DECLARED_RATE = Number(setting('declaredRate', 0));
+    var STORAGE_KEY = 'questionnaire_state';
+    var TALLY_ORIGIN = 'https://tally.so';
+
+    // First character of the ident = source site; third = operating system.
+    var SOURCES = {
+        c: 'chat-fr', e: 'europnet', a: 'andromede', f: 'fantasya', l: '123love',
+        v: 'loovchat', m: 'mikochat', x: 'xchat-fr', z: 'app', o: 'autre', d: 'direct',
+    };
+    var DEVICES = { a: 'mobile', i: 'mobile', w: 'bureau', m: 'bureau', l: 'bureau' };
+
+    // ---- per-wave marker, kept next to plugin-asl's activity counter ----
+    function loadMarker() {
+        try {
+            var data = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+            if (data && data.vague === WAVE) {
+                return data;
+            }
+        } catch (e) { /* unavailable or corrupt: start over */ }
+        return { vague: WAVE, etat: null, affichages: 0 };
+    }
+    function saveMarker(marker) {
+        try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(marker));
+        } catch (e) { /* unavailable: the card may come back, never worse */ }
+    }
+
+    // Shared between the card (one instance, re-rendered per buffer) and the modal.
+    var shared = kiwi.Vue.observable({
+        phase: 'idle',      // idle → waiting → shown → done
+        source: null,       // 'observee' | 'declaree'
+        announced: false,   // live-region announcement happens once per session
+    });
+
+    function asl() {
+        return kiwi.state.pluginASL;
+    }
+
+    function eligibleSource() {
+        var marker = loadMarker();
+        if (marker.etat || marker.affichages >= MAX_DISPLAYS) {
+            return null;
+        }
+        var api = asl();
+        if (!api || !api.activity || !api.profile() ) {
+            return null;
+        }
+        var activity = api.activity();
+        if (activity.activeDays >= 2) {
+            return 'observee';
+        }
+        if (activity.window === 1 && Math.random() < DECLARED_RATE) {
+            return 'declaree';
+        }
+        return null;
+    }
+
+    function composerIsEmpty() {
+        var editor = document.querySelector('.kiwi-controlinput .kiwi-ircinput-editor');
+        return !editor || editor.textContent.trim() === '';
+    }
+
+    function activeIsChannel() {
+        var buffer = kiwi.state.getActiveBuffer();
+        return !!(buffer && buffer.isChannel());
+    }
+
+    // The card appears once the delay has passed, on a channel, with nothing being typed.
+    var poller = null;
+    function waitForCalm() {
+        poller = setInterval(function () {
+            if (!activeIsChannel() || !composerIsEmpty()) {
+                return;
+            }
+            clearInterval(poller);
+            var marker = loadMarker();
+            marker.affichages += 1;
+            saveMarker(marker);
+            shared.phase = 'shown';
+        }, 3000);
+    }
+
+    kiwi.on('irc.registered', function () {
+        if (shared.phase !== 'idle') {
+            return;
+        }
+        shared.phase = 'waiting';
+        setTimeout(function () {
+            shared.source = eligibleSource();
+            if (!shared.source) {
+                shared.phase = 'done';
+                return;
+            }
+            waitForCalm();
+        }, DELAY_MS);
+    });
+
+    // ---- the form URL: classes only ----
+    function isTeam(network) {
+        if (!network) {
+            return false;
+        }
+        var modes = network.ircClient && network.ircClient.user && network.ircClient.user.modes;
+        var ircop = !!modes && (typeof modes.has === 'function' ? modes.has('o') : String(modes).indexOf('o') !== -1);
+        var op = network.buffers.some(function (b) {
+            return b.isChannel() && b.joined && b.isUserAnOp(network.nick);
+        });
+        return ircop || op;
+    }
+
+    function formFields() {
+        var api = asl();
+        var profile = api.profile() || {};
+        var activity = api.activity();
+        var network = kiwi.state.getActiveNetwork();
+        var ident = '';
+        try { ident = window.localStorage.getItem('irc_ident') || ''; } catch (e) { /* none */ }
+
+        var fields = {
+            age: profile.age,
+            genre: profile.gender,
+            univers: api.universe(),
+            provenance: SOURCES[ident.charAt(0)],
+            appareil: DEVICES[ident.charAt(2)],
+            freq_source: shared.source,
+            equipe: isTeam(network) ? 'oui' : 'non',
+            vague: WAVE,
+        };
+        if (shared.source === 'observee') {
+            fields.frequence = activity.activeDays;
+            fields.fenetre = activity.window;
+        }
+        return Object.keys(fields)
+            .filter(function (k) { return fields[k] !== undefined && fields[k] !== null && fields[k] !== ''; })
+            .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(fields[k]); })
+            .join('&');
+    }
+
+    // ---- the modal, mounted inside .kiwi-wrap so it inherits the theme tokens ----
+    var modal = new kiwi.Vue({
+        template: '#questionnaire-modal',
+        data: function () {
+            return { open: false, thanks: false, embedUrl: '', tabUrl: '' };
+        },
+        methods: {
+            show: function (query) {
+                this.embedUrl = TALLY_ORIGIN + '/embed/' + FORM_ID + '?hideTitle=1&alignLeft=1&' + query;
+                this.tabUrl = TALLY_ORIGIN + '/r/' + FORM_ID + '?' + query;
+                this.open = true;
+                this.$nextTick(function () {
+                    if (this.$refs.dialog) {
+                        this.$refs.dialog.focus();
+                    }
+                });
+            },
+            close: function () {
+                this.open = false;
+                // The card is gone (answered), so focus goes back to where the user types.
+                var editor = document.querySelector('.kiwi-controlinput .kiwi-ircinput-editor');
+                if (editor) {
+                    editor.focus();
+                }
+            },
+            onKeydown: function (e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.close();
+                    return;
+                }
+                if (e.key !== 'Tab') {
+                    return;
+                }
+                var focusable = Array.prototype.slice.call(this.$refs.dialog.querySelectorAll(
+                    'button, a[href], iframe, [tabindex]:not([tabindex="-1"])'
+                ));
+                if (!focusable.length) {
+                    return;
+                }
+                var first = focusable[0];
+                var last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            },
+            onMessage: function (e) {
+                if (e.origin !== TALLY_ORIGIN || typeof e.data !== 'string') {
+                    return;
+                }
+                if (e.data.indexOf('Tally.FormSubmitted') === -1) {
+                    return;
+                }
+                this.close();
+                this.thanks = true;
+                var self = this;
+                setTimeout(function () { self.thanks = false; }, 4000);
+            },
+        },
+        created: function () {
+            window.addEventListener('message', this.onMessage);
+        },
+    });
+
+    function mountModal() {
+        var wrap = document.querySelector('.kiwi-wrap');
+        if (!wrap) {
+            return;
+        }
+        modal.$mount();
+        wrap.appendChild(modal.$el);
+    }
+    if (document.querySelector('.kiwi-wrap')) {
+        mountModal();
+    } else {
+        kiwi.once('ready', mountModal);
+    }
+
+    // ---- the card, at the top of whichever channel is active ----
+    kiwi.addUi('buffer_top', {
+        template: '#questionnaire-card',
+        props: ['buffer', 'network'],
+        data: function () {
+            return { entering: false, announce: false };
+        },
+        computed: {
+            visible: function () {
+                return shared.phase === 'shown' && !!this.buffer && this.buffer.isChannel();
+            },
+        },
+        watch: {
+            // Animate and announce only the first appearance of the session; switching
+            // channel shows the same card, already there.
+            visible: {
+                immediate: true,
+                handler: function (now) {
+                    if (!now || shared.announced) {
+                        this.entering = false;
+                        this.announce = false;
+                        return;
+                    }
+                    shared.announced = true;
+                    this.entering = true;
+                    this.announce = true;
+                },
+            },
+        },
+        methods: {
+            settle: function (etat) {
+                var marker = loadMarker();
+                marker.etat = etat;
+                saveMarker(marker);
+                shared.phase = 'done';
+            },
+            decline: function () {
+                this.settle('refuse');
+            },
+            answer: function () {
+                var query = formFields();
+                this.settle('repondu');
+                modal.show(query);
+            },
+        },
+    });
+});
+</script>
+
+<style>
+/* Layout only: the theme paints .modal, .invite and .toast. The form needs more room than
+   the default dialog, and the iframe scrolls itself. */
+.kiwi-questionnaire-modal {
+    display: flex;
+    flex-direction: column;
+    width: 32rem;
+    height: min(40rem, 86vh);
+    overflow: hidden;
+}
+
+.kiwi-questionnaire-frame {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+    /* A Tally form has one theme for everyone: it stays light in both chat modes. */
+    background: #fff;
+}
+
+.kiwi-questionnaire-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .6rem;
+    font-size: .8rem;
+}
+
+/* The foot is ours, not a design-system object: give its link the accent explicitly. */
+.kiwi-questionnaire-foot a {
+    color: var(--color-accent, #004b87);
+    font-weight: var(--weight-bold, 700);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.kiwi-questionnaire-foot a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring, 0 0 0 3px rgba(139, 203, 249, .6));
+    border-radius: var(--radius-xs, 4px);
+}
+
+/* Narrow screens: full screen, not the theme's 90% bottom sheet. One scroll only (the
+   iframe's), no chat left visible above, and the keyboard keeps the open questions in view.
+   The foot shrinks to its link: every line it takes is a line the form loses. */
+@media (max-width: 560px) {
+    .kiwi-questionnaire-overlay.overlay {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .kiwi-questionnaire-overlay .kiwi-questionnaire-modal {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .kiwi-questionnaire-foot {
+        justify-content: flex-end;
+    }
+
+    .kiwi-questionnaire-foot span {
+        display: none;
+    }
+}
+</style>
